@@ -1,0 +1,239 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style>
+			body {
+                background-color: #0066FF;
+				text-align: center;
+				font-family:"Montserrat";
+			}
+			p{
+				display:inline;
+			}
+			div.pomodoro-timer{
+				font-size: 100px;
+			}
+		</style>
+</head>
+
+<body>
+
+<div id="pomodoro-container">
+	<h2>POMODORO CLOCK</h2>
+	<br><br>
+	<div id="timer-clock">
+		<canvas id="my_canvas" width="400" height="400"></canvas></div>
+	</div>
+	<br>
+	<div class="pomodoro-clock-actions" id="pomodoro-clock-actions">
+			<button id="pomodoro-start">START</button>
+			<button id="pomodoro-stop">STOP</button>
+	</div>
+	<br><br>
+	<div id="pomodoro-clock">
+		<div id="pomodoro-work-update">
+			<p>Work Session (minutes) </p>
+			<button id="pomodoro-minuswork">-</button>
+			<p id="work-time">25</p>
+			<button id="pomodoro-addwork">+</button>
+		</div>
+		<br>
+		<div id="pomodoro-break-update">
+			<p>Break Session(minutes) </p>
+			<button id="pomodoro-minusbreak">-</button>
+			<p id="break-time">5</p>
+			<button id="pomodoro-addbreak">+</button>
+		</div>
+	</div>
+</div>
+<br><br>
+<h2>WHAT GETS MEASURED, GETS MANAGED!!!</h2>
+<br><br>
+<h1>Get Out There and Pomo-Do-It!</h1>
+
+<script>
+
+	function minutesToSeconds(mins)
+	{
+		return mins*60;
+	}
+	const startButton=document.querySelector('#pomodoro-start');
+	const stopButton=document.querySelector('#pomodoro-stop');
+	const addWorkButton=document.querySelector('#pomodoro-addwork');
+	const minusWorkButton=document.querySelector('#pomodoro-minuswork');
+	const addBreakButton=document.querySelector('#pomodoro-addbreak');
+	const minusBreakButton=document.querySelector('#pomodoro-minusbreak');
+	var isClockStopped=true;
+	var workSessionDuration=1500;
+	var currentTimeLeftInSession=1500;
+	var breakSessionDuration=300;
+	var type='Work';
+
+	startButton.addEventListener('click',function(){
+		toggleClock();
+	});
+
+	stopButton.addEventListener('click',function(){
+		toggleClock(true);
+	});
+
+	minusWorkButton.addEventListener('click',function(){
+		workSessionDuration=workSessionDuration-60;
+		var x=parseInt(document.getElementById("work-time").innerText);
+		x=x-1;
+		document.getElementById("work-time").innerHTML = x;
+		workSessionDuration=x*60; 
+	});
+
+	addWorkButton.addEventListener('click',function(){
+		workSessionDuration=workSessionDuration+60;
+		var x=parseInt(document.getElementById("work-time").innerText);
+		x=x+1;
+		document.getElementById("work-time").innerHTML = x;
+		workSessionDuration=x*60; 
+	});
+
+	minusBreakButton.addEventListener('click',function(){
+		breakSessionDuration=breakSessionDuration-60;
+		var x=parseInt(document.getElementById("break-time").innerText);
+		x=x-1;
+		document.getElementById("break-time").innerHTML = x; 
+		breakSessionDuration=x*60;
+	});
+
+	addBreakButton.addEventListener('click',function(){
+		breakSessionDuration=breakSessionDuration+60;
+		var x=parseInt(document.getElementById("break-time").innerText);
+		x=x+1;
+		document.getElementById("break-time").innerHTML = x;
+		breakSessionDuration=x*60; 
+	});
+
+	var session;
+	var res;
+	var ctx = document.getElementById('my_canvas').getContext('2d');
+	ctx.font="50px Arial";
+	ctx.textAlign='center';
+	ctx.stroke();
+	var no;
+	var start = 4.72;
+	var cw = ctx.canvas.width;
+	var ch = ctx.canvas.height; 
+	ctx.fillText("Let's get started...",cw/2,ch/2);
+	var diff;
+	
+	function createClock(result,type,session){
+		diff = ((no/parseInt(session))*Math.PI*2*10).toFixed(2);
+		ctx.clearRect(0, 0, cw, ch);
+		ctx.lineWidth = 15;
+		ctx.fillStyle = '#000';
+		ctx.strokeStyle = '#000';
+		ctx.textAlign = 'center';
+		ctx.font="100px Arial";
+		ctx.fillText(result,cw/2,ch/2);
+		ctx.font="50px Arial";
+		ctx.fillText(type,cw/2,ch/2+50);
+		ctx.beginPath();
+		ctx.arc(cw/2,ch/2,190, start, diff/10+start);
+		ctx.stroke();
+		if(no >= parseInt(session))
+		{
+			ctx.clearRect(0, 0, cw, ch);
+		}
+		no++;
+	}
+	function toggleClock(reset)
+	{
+		if(reset)
+		{
+			//STOP THE TIMER
+			stopClock();
+			no=1;
+		}
+		else
+		{
+			if(isClockStopped)
+			{
+				isClockStopped=false;
+			}
+			//START THE TIMER
+			if(type==='Work')
+			{
+			currentTimeLeftInSession=workSessionDuration;
+			}
+			else
+			{
+				currentTimeLeftInSession=breakSessionDuration;
+			}
+			no=1;
+			clockTimer=setInterval(function(){
+				stepDown();
+				res=displayCurrentTimeLeftInSession();
+				if(type==='Work')
+				{
+
+					createClock(res,type,workSessionDuration);
+				}
+				else
+				{
+					createClock(res,type,breakSessionDuration);
+				}
+			},1000);
+			
+		}
+	}
+
+	function displayCurrentTimeLeftInSession()
+	{
+		const secondsLeft=currentTimeLeftInSession;
+		let result='';
+		const seconds=secondsLeft%60;
+		const minutes=parseInt(secondsLeft/60)%60;
+		let hours=parseInt(seconds/3600);
+		function addLeadingZeores(time)
+		{
+			return (time<10 ? ('0'+String(time)):time)
+		}
+		if(hours>0) result=result+String(hours)+":";
+		result=result+String(addLeadingZeores(minutes))+":"+String(addLeadingZeores(seconds));
+		return result;
+	}
+
+	function stopClock()
+	{
+		clearInterval(clockTimer);
+		isClockStopped=true;
+		currentTimeLeftInSession=workSessionDuration;
+		ctx.clearRect(0, 0, cw, ch);
+		ctx.font="30px Arial";
+		ctx.fillText("The clock has been stopped...",cw/2,ch/2);
+		type='Work';
+	}
+
+	function stepDown()
+	{
+		if(currentTimeLeftInSession>0)
+		{
+			currentTimeLeftInSession--;
+		}
+		else if(currentTimeLeftInSession===0)
+		{
+			if(type==='Work')
+			{
+				alert("Congratulations...Your study session has successfully ended...And break session is about to begin...Click OK to begin");
+				no=0;
+				currentTimeLeftInSession=breakSessionDuration;
+				type='Break';
+			}
+			else
+			{
+				alert("Congratulations...Your break session has successfully ended...And work session is about to begin...Click OK to begin");
+				no=0;
+				currentTimeLeftInSession=workSessionDuration;
+				type='Work';
+			}
+		}
+	}
+</script>
+</body>
+</html>
